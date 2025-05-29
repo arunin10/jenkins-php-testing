@@ -6,7 +6,7 @@ pipeline{
     stages{
         stage('deploy to remote'){
             steps{
-                sh 'scp ${WORKSPACE}/* root@${staging_server}:D:/Web/arul/'
+                bat 'scp ${WORKSPACE}/* root@${staging_server}:D:/Web/arul/'
             }
         }
     }
