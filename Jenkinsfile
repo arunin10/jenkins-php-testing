@@ -1,18 +1,40 @@
-node {
-    stage('Checkout Code') {
-        checkout scm
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/arunin10/jenkins-php-testing.git'
+        BRANCH = 'main'
+        DEPLOY_DIR = 'D:\Web\arul'
     }
 
-    stage('Deploy to Local Folder') {
-        powershell '''
-        $source = "$env:WORKSPACE"
-        $destination = "D:\\Web\\arul"
-
-        if (-Not (Test-Path $destination)) {
-            New-Item -ItemType Directory -Path $destination -Force
+    stages {
+        stage('Checkout from GitHub') {
+            steps {
+                git branch: "${BRANCH}", url: "${GIT_REPO}"
+            }
         }
 
-        robocopy $source $destination /MIR /XF *.git* /XD .git
-        '''
+        stage('Deploy Files') {
+            steps {
+                bat """
+                echo Cleaning target directory...
+                if exist "${DEPLOY_DIR}" rd /s /q "${DEPLOY_DIR}"
+                mkdir "${DEPLOY_DIR}"
+
+                echo Copying files to deployment directory...
+                xcopy /E /Y "%WORKSPACE%\\*" "${DEPLOY_DIR}\\"
+                echo Deployment complete.
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment successful!'
+        }
+        failure {
+            echo '❌ Deployment failed!'
+        }
     }
 }
