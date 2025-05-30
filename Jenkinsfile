@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        staging_server = 'ebiz.pmgasia.com' // replace with your actual server IP or domain
+        staging_server = '4.194.217.14' // replace with your actual server IP or domain
     }
 
     stages {
