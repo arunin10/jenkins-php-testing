@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         GIT_REPO = 'https://github.com/arunin10/jenkins-php-testing.git'
-        BRANCH = 'main'
+        BRANCH = 'master'
         DEPLOY_DIR = 'D:\\Web\\arul'
     }
 
