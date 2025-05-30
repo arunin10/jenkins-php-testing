@@ -1,31 +1,18 @@
-pipeline {
-    agent any
-
-    environment {
-        staging_server = '10.0.2.12'
+node {
+    stage('Checkout Code') {
+        checkout scm
     }
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
+    stage('Deploy to Local Folder') {
+        powershell '''
+        $source = "$env:WORKSPACE"
+        $destination = "D:\\Web\\arul"
+
+        if (-Not (Test-Path $destination)) {
+            New-Item -ItemType Directory -Path $destination -Force
         }
 
-        stage('Deploy to Remote') {
-            steps {
-                powershell '''
-                    $files = Get-ChildItem -Path "$env:WORKSPACE" -Recurse -File
-                    foreach ($file in $files) {
-                        $relativePath = $file.FullName.Substring($env:WORKSPACE.Length + 1)
-                        $remotePath = "D:/Web/arul/" + $relativePath.Replace("\\", "/")
-                        $remoteDir = [System.IO.Path]::GetDirectoryName($remotePath)
-
-                        ssh deployer@${env:staging_server} "mkdir -p `"$remoteDir`""
-                        scp $file.FullName deployer@${env:staging_server}:"$remotePath"
-                    }
-                '''
-            }
-        }
+        robocopy $source $destination /MIR /XF *.git* /XD .git
+        '''
     }
 }
