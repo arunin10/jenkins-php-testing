@@ -1,31 +1,20 @@
-pipeline {
-    agent any
+environment {
+    staging_server = '10.0.2.12'
+    staging_user = 'arul.kumar' // Windows user you created
+}
 
-    environment {
-        staging_server = '10.0.2.12' // replace with your actual server IP or domain
-    }
+stage('Deploy to Remote') {
+    steps {
+        powershell '''
+        $files = Get-ChildItem -Path "$env:WORKSPACE" -Recurse -File
+        foreach ($file in $files) {
+            $relativePath = $file.FullName.Substring($env:WORKSPACE.Length + 1)
+            $remotePath = "D:/Web/arul/" + $relativePath.Replace("\\", "/")
+            $remoteDir = [System.IO.Path]::GetDirectoryName($remotePath)
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
+            ssh $env:staging_user@$env:staging_server "powershell -Command \\"New-Item -ItemType Directory -Force -Path '$remoteDir'\\""
+            scp $file.FullName $env:staging_user@$env:staging_server:"$remotePath"
         }
-
-        stage('Deploy to Remote') {
-            steps {
-                powershell '''
-                # Define local and remote paths
-                $localPath = "$env:WORKSPACE\\*"
-                $remotePath = "/cygdrive/d/Web/arul/"  # Cygwin path style for SCP compatibility
-
-                # Create remote base directory
-                ssh root@${env:staging_server} "mkdir -p /cygdrive/d/Web/arul"
-
-                # Copy entire workspace
-                scp -r $localPath root@${env:staging_server}:"$remotePath"
-                '''
-            }
-        }
+        '''
     }
 }
